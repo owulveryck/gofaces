@@ -17,9 +17,9 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/nfnt/resize"
+	"github.com/owulveryck/gofaces/internal/x/images"
 	"github.com/owulveryck/onnx-go"
 	"github.com/owulveryck/onnx-go/backend/x/gorgonnx"
-	"github.com/owulveryck/onnx-go/internal/x/images"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
 	"golang.org/x/image/math/fixed"
