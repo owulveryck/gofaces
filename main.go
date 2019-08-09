@@ -161,7 +161,7 @@ func processOutput(t []tensor.Tensor, err error) {
 		log.Fatal(err)
 	}
 	dense := t[0].(*tensor.Dense)
-	must(dense.Reshape(30, gridHeight, gridWidth))
+	must(dense.Reshape(gridHeight, gridWidth, 30))
 	data, err := native.Tensor3F32(dense)
 	if err != nil {
 		log.Fatal(err)
@@ -174,14 +174,14 @@ func processOutput(t []tensor.Tensor, err error) {
 		for cy := 0; cy < gridHeight; cy++ {
 			for b := 0; b < boxesPerCell; b++ {
 				channel := b * (numClasses + 5)
-				tx := data[channel][cx][cy]
-				ty := data[channel+1][cx][cy]
-				tw := data[channel+2][cx][cy]
-				th := data[channel+3][cx][cy]
-				tc := data[channel+4][cx][cy]
+				tx := data[cx][cy][channel]
+				ty := data[cx][cy][channel+1]
+				tw := data[cx][cy][channel+2]
+				th := data[cx][cy][channel+3]
+				tc := data[cx][cy][channel+4]
 				tclasses := make([]float32, numClasses)
 				for i := 0; i < numClasses; i++ {
-					tclasses[i] = data[channel+5+i][cx][cy]
+					tclasses[i] = data[cx][cy][channel+5+i]
 				}
 				// The predicted tx and ty coordinates are relative to the location
 				// of the grid cell; we use the logistic sigmoid to constrain these
