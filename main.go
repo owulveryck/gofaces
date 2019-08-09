@@ -43,7 +43,7 @@ const (
 )
 
 type configuration struct {
-	ConfidenceThreshold float64 `envconfig:"confidence_threshold" default:"0.30" required:"true"`
+	ConfidenceThreshold float64 `envconfig:"confidence_threshold" default:"0.60" required:"true"`
 	ClassProbaThreshold float64 `envconfig:"proba_threshold" default:"0.90" required:"true"`
 }
 
@@ -91,7 +91,7 @@ func main() {
 	must(m.UnmarshalBinary(b))
 
 	input := getInput()
-	i, err := tensor.T(input, 0, 2, 3, 1)
+	i, err := tensor.T(input, 0, 3, 2, 1)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -99,7 +99,6 @@ func main() {
 	m.SetInput(0, i)
 	must(backend.Run())
 	outputs, err := m.GetOutputTensors()
-	log.Println(outputs)
 
 	processOutput(outputs, err)
 
@@ -161,7 +160,7 @@ func processOutput(t []tensor.Tensor, err error) {
 		log.Fatal(err)
 	}
 	dense := t[0].(*tensor.Dense)
-	must(dense.Reshape(gridHeight, gridWidth, 30))
+	must(dense.Reshape(gridHeight, gridWidth, (5+numClasses)*boxesPerCell))
 	data, err := native.Tensor3F32(dense)
 	if err != nil {
 		log.Fatal(err)
@@ -183,6 +182,13 @@ func processOutput(t []tensor.Tensor, err error) {
 				for i := 0; i < numClasses; i++ {
 					tclasses[i] = data[cx][cy][channel+5+i]
 				}
+				fmt.Printf("%v: %v\n", tx, int(sigmoid(tx)*100))
+				fmt.Printf("%v: %v\n", ty, int(sigmoid(ty)*100))
+				fmt.Printf("%v: %v\n", tw, int(sigmoid(tw)*100))
+				fmt.Printf("%v: %v\n", th, int(sigmoid(th)*100))
+				fmt.Printf("%v: %v\n", tc, int(sigmoid(tc)*100))
+				fmt.Printf("%v: %v\n", tclasses[0], int(sigmoid(tclasses[0])*100))
+
 				// The predicted tx and ty coordinates are relative to the location
 				// of the grid cell; we use the logistic sigmoid to constrain these
 				// coordinates to the range 0 - 1. Then we add the cell coordinates
@@ -304,6 +310,7 @@ func exp(val float32) float64 {
 func softmax(a []float32) []float64 {
 	var sum float64
 	output := make([]float64, len(a))
+
 	for i := 0; i < len(a); i++ {
 		output[i] = math.Exp(float64(a[i]))
 		sum += output[i]
