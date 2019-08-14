@@ -91,12 +91,7 @@ func main() {
 	must(m.UnmarshalBinary(b))
 
 	input := getInput()
-	i, err := tensor.T(input, 0, 3, 2, 1)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println(i.Shape())
-	m.SetInput(0, i)
+	m.SetInput(0, input)
 	must(backend.Run())
 	outputs, err := m.GetOutputTensors()
 
@@ -120,6 +115,7 @@ func getInput() tensor.Tensor {
 		}
 		defer f.(*os.File).Close()
 	}
+	//img, _, err = image.Decode(f)
 	img, err = jpeg.Decode(f)
 	if err != nil {
 		log.Fatal(err)
@@ -146,9 +142,9 @@ func getInput() tensor.Tensor {
 		log.Fatal("unhandled type")
 	}
 
-	inputT := tensor.New(tensor.WithShape(1, 3, hSize, wSize), tensor.Of(tensor.Float32))
+	inputT := tensor.New(tensor.WithShape(1, wSize, hSize, 3), tensor.Of(tensor.Float32))
 	//err = images.ImageToBCHW(img, inputT)
-	err = images.ImageToBCHW(imgRescaled, inputT)
+	err = images.ImageToBWHC(imgRescaled, inputT)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -173,21 +169,15 @@ func processOutput(t []tensor.Tensor, err error) {
 		for cy := 0; cy < gridHeight; cy++ {
 			for b := 0; b < boxesPerCell; b++ {
 				channel := b * (numClasses + 5)
-				tx := data[cx][cy][channel]
-				ty := data[cx][cy][channel+1]
-				tw := data[cx][cy][channel+2]
-				th := data[cx][cy][channel+3]
-				tc := data[cx][cy][channel+4]
+				tx := data[cy][cx][channel]
+				ty := data[cy][cx][channel+1]
+				tw := data[cy][cx][channel+2]
+				th := data[cy][cx][channel+3]
+				tc := data[cy][cx][channel+4]
 				tclasses := make([]float32, numClasses)
 				for i := 0; i < numClasses; i++ {
-					tclasses[i] = data[cx][cy][channel+5+i]
+					tclasses[i] = data[cy][cx][channel+5+i]
 				}
-				fmt.Printf("%v: %v\n", tx, int(sigmoid(tx)*100))
-				fmt.Printf("%v: %v\n", ty, int(sigmoid(ty)*100))
-				fmt.Printf("%v: %v\n", tw, int(sigmoid(tw)*100))
-				fmt.Printf("%v: %v\n", th, int(sigmoid(th)*100))
-				fmt.Printf("%v: %v\n", tc, int(sigmoid(tc)*100))
-				fmt.Printf("%v: %v\n", tclasses[0], int(sigmoid(tclasses[0])*100))
 
 				// The predicted tx and ty coordinates are relative to the location
 				// of the grid cell; we use the logistic sigmoid to constrain these
