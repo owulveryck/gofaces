@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"image"
@@ -13,11 +14,11 @@ import (
 	"log"
 	"math"
 	"os"
+	"reflect"
 	"sort"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/nfnt/resize"
-	"github.com/owulveryck/gofaces/internal/x/images"
 	"github.com/owulveryck/onnx-go"
 	"github.com/owulveryck/onnx-go/backend/x/gorgonnx"
 	"golang.org/x/image/font"
@@ -144,7 +145,7 @@ func getInput() tensor.Tensor {
 
 	inputT := tensor.New(tensor.WithShape(1, wSize, hSize, 3), tensor.Of(tensor.Float32))
 	//err = images.ImageToBCHW(img, inputT)
-	err = images.ImageToBWHC(imgRescaled, inputT)
+	err = imageToBWHC(imgRescaled, inputT)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -434,4 +435,61 @@ func iou(r1, r2 image.Rectangle) float64 {
 
 func area(r image.Rectangle) int {
 	return max(0, r.Max.X-r.Min.X-1) * max(0, r.Max.Y-r.Min.Y-1)
+}
+
+// ImageToBWHC convert an image to a BWHC tensor
+// this function returns an error if:
+//
+//   - dst is not a pointer
+//   - dst's shape is not 4
+//   - dst' second dimension is not 1
+//   - dst's third dimension != i.Bounds().Dy()
+//   - dst's fourth dimension != i.Bounds().Dx()
+//   - dst's type is not float32 or float64 (temporarly)
+func imageToBWHC(img image.Image, dst tensor.Tensor) error {
+	// check if tensor is a pointer
+	rv := reflect.ValueOf(dst)
+	if rv.Kind() != reflect.Ptr || rv.IsNil() {
+		return errors.New("cannot decode image into a non pointer or a nil receiver")
+	}
+	// check if tensor is compatible with BWHC (4 dimensions)
+	if len(dst.Shape()) != 4 {
+		return fmt.Errorf("Expected a 4 dimension tensor, but receiver has only %v", len(dst.Shape()))
+	}
+	// Check the batch size
+	if dst.Shape()[0] != 1 {
+		return errors.New("only batch size of one is supported")
+	}
+	w := img.Bounds().Dx()
+	h := img.Bounds().Dy()
+	if dst.Shape()[1] != h || dst.Shape()[2] != w {
+		return fmt.Errorf("cannot fit image into tensor; image is %v*%v but tensor is %v*%v", h, w, dst.Shape()[2], dst.Shape()[3])
+	}
+	switch dst.Dtype() {
+	case tensor.Float32:
+		for x := 0; x < w; x++ {
+			for y := 0; y < h; y++ {
+				r, g, b, a := img.At(x, y).RGBA()
+				if a != 65535 {
+					return errors.New("transparency not handled")
+				}
+				err := dst.SetAt(float32(r)/65535, 0, x, y, 1)
+				if err != nil {
+					return err
+				}
+				err = dst.SetAt(float32(g)/65535, 0, x, y, 1)
+				if err != nil {
+					return err
+				}
+				err = dst.SetAt(float32(b)/65535, 0, x, y, 2)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	default:
+		return fmt.Errorf("%v not handled yet", dst.Dtype())
+	}
+	return nil
+
 }
