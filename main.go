@@ -17,8 +17,8 @@ import (
 	"reflect"
 	"sort"
 
+	"github.com/disintegration/gift"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/nfnt/resize"
 	"github.com/owulveryck/onnx-go"
 	"github.com/owulveryck/onnx-go/backend/x/gorgonnx"
 	"golang.org/x/image/font"
@@ -60,7 +60,6 @@ var (
 	imgF        = flag.String("img", "", "path of an input jpeg image (use - for stdin)")
 	outputF     = flag.String("output", "", "path of an output png file (use - for stdout)")
 	silent      = flag.Bool("s", false, "silent mode (useful if output is -)")
-	img         image.Image
 	classes     = []string{"face"}
 	anchors     = []float64{0.738768, 0.874946, 2.42204, 2.65704, 4.30971, 7.04493, 10.246, 4.59428, 12.6868, 11.8741}
 	scaleFactor = float32(1) // The scale factor to resize the image to hSize*wSize
@@ -100,7 +99,7 @@ func main() {
 
 }
 
-func getInput() tensor.Tensor {
+func readIMG() (image.Image, error) {
 	if *imgF == "" {
 		flag.Usage()
 		os.Exit(1)
@@ -116,36 +115,34 @@ func getInput() tensor.Tensor {
 		}
 		defer f.(*os.File).Close()
 	}
-	//img, _, err = image.Decode(f)
-	img, err = jpeg.Decode(f)
-	if err != nil {
-		log.Fatal(err)
-	}
-	// find the resize scale
-	imgRescaled := image.NewNRGBA(image.Rect(0, 0, wSize, hSize))
-	color := color.RGBA{0, 0, 0, 255}
+	return jpeg.Decode(f)
+}
 
-	draw.Draw(imgRescaled, imgRescaled.Bounds(), &image.Uniform{color}, image.ZP, draw.Src)
-	var m image.Image
+func getInput() tensor.Tensor {
+	img, err := readIMG()
+	var resizeFilter gift.Filter
 	if (img.Bounds().Max.X - img.Bounds().Min.X) > (img.Bounds().Max.Y - img.Bounds().Min.Y) {
 		scaleFactor = float32(img.Bounds().Max.Y-img.Bounds().Min.Y) / float32(hSize)
-		m = resize.Resize(0, hSize, img, resize.Lanczos3)
+		resizeFilter = gift.Resize(0, hSize, gift.LanczosResampling)
 	} else {
 		scaleFactor = float32(img.Bounds().Max.X-img.Bounds().Min.X) / float32(wSize)
-		m = resize.Resize(wSize, 0, img, resize.Lanczos3)
-	}
-	switch m.(type) {
-	case *image.NRGBA:
-		draw.Draw(imgRescaled, imgRescaled.Bounds(), m.(*image.NRGBA), image.ZP, draw.Src)
-	case *image.YCbCr:
-		draw.Draw(imgRescaled, imgRescaled.Bounds(), m.(*image.YCbCr), image.ZP, draw.Src)
-	default:
-		log.Fatal("unhandled type")
+		resizeFilter = gift.Resize(wSize, 0, gift.LanczosResampling)
 	}
 
 	inputT := tensor.New(tensor.WithShape(1, wSize, hSize, 3), tensor.Of(tensor.Float32))
-	//err = images.ImageToBCHW(img, inputT)
-	err = imageToBWHC(imgRescaled, inputT)
+
+	filters := []gift.Filter{
+		resizeFilter,
+		gift.CropToSize(wSize, hSize, gift.LeftAnchor),
+		gift.Colorize(1.5, 0.1, 100),
+	}
+	for _, filter := range filters {
+		g := gift.New(filter)
+		dst := image.NewNRGBA(image.Rect(0, 0, wSize, hSize))
+		g.Draw(dst, img)
+		img = dst
+	}
+	err = imageToBWHC(img, inputT)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -244,6 +241,10 @@ func drawClassification(boxes []box) {
 			log.Fatal(err)
 		}
 		defer f.(*os.File).Close()
+	}
+	img, err := readIMG()
+	if err != nil {
+		log.Fatal(err)
 	}
 	m := image.NewNRGBA(img.Bounds())
 
