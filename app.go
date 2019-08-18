@@ -3,52 +3,19 @@ package gofaces
 import (
 	"image"
 	"log"
-	"os"
 	"sort"
 
-	"github.com/disintegration/gift"
 	"gorgonia.org/tensor"
 	"gorgonia.org/tensor/native"
 )
 
-func getInput() tensor.Tensor {
-	img, err := readIMG(os.Stdin)
-	var resizeFilter gift.Filter
-	if (img.Bounds().Max.X - img.Bounds().Min.X) > (img.Bounds().Max.Y - img.Bounds().Min.Y) {
-		scaleFactor = float32(img.Bounds().Max.Y-img.Bounds().Min.Y) / float32(hSize)
-		resizeFilter = gift.Resize(0, hSize, gift.LanczosResampling)
-	} else {
-		scaleFactor = float32(img.Bounds().Max.X-img.Bounds().Min.X) / float32(wSize)
-		resizeFilter = gift.Resize(wSize, 0, gift.LanczosResampling)
-	}
-
-	inputT := tensor.New(tensor.WithShape(1, wSize, hSize, 3), tensor.Of(tensor.Float32))
-
-	filters := []gift.Filter{
-		resizeFilter,
-		gift.CropToSize(wSize, hSize, gift.LeftAnchor),
-		gift.Colorize(1.5, 0.1, 100),
-	}
-	for _, filter := range filters {
-		g := gift.New(filter)
-		dst := image.NewNRGBA(image.Rect(0, 0, wSize, hSize))
-		g.Draw(dst, img)
-		img = dst
-	}
-	err = imageToNormalizedBWHC(img.(*image.RGBA), inputT)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return inputT
-}
-
 // processOutput analyze the tensor t and output the prediction boxes
-func processOutput(t []tensor.Tensor, err error) []box {
+func processOutput(dense *tensor.Dense) ([]box, error) {
+
+	err := dense.Reshape(gridHeight, gridWidth, (5+numClasses)*boxesPerCell)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	dense := t[0].(*tensor.Dense)
-	must(dense.Reshape(gridHeight, gridWidth, (5+numClasses)*boxesPerCell))
 	data, err := native.Tensor3F32(dense)
 	if err != nil {
 		log.Fatal(err)
@@ -96,13 +63,7 @@ func processOutput(t []tensor.Tensor, err error) []box {
 			}
 		}
 	}
-	return boxes
-}
-
-func must(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
+	return boxes, nil
 }
 
 // from https://medium.com/@jonathan_hui/real-time-object-detection-with-yolo-yolov2-28b1b93e2088
