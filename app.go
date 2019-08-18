@@ -35,14 +35,15 @@ func getInput() tensor.Tensor {
 		g.Draw(dst, img)
 		img = dst
 	}
-	err = imageToNormalizedBWHC(img, inputT)
+	err = imageToNormalizedBWHC(img.(*image.RGBA), inputT)
 	if err != nil {
 		log.Fatal(err)
 	}
 	return inputT
 }
 
-func processOutput(t []tensor.Tensor, err error) {
+// processOutput analyze the tensor t and output the prediction boxes
+func processOutput(t []tensor.Tensor, err error) []box {
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -95,7 +96,7 @@ func processOutput(t []tensor.Tensor, err error) {
 			}
 		}
 	}
-	boxes = sanitize(boxes)
+	return boxes
 }
 
 func must(err error) {

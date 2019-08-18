@@ -6,11 +6,26 @@ import (
 	"image"
 	"reflect"
 
+	"github.com/disintegration/gift"
 	"gorgonia.org/tensor"
 )
 
+// getSuitableImage from the io.Reader reads the image and do the pre-processing such
+// as resize, crop or saturation
+func resizeImage(img image.Image) (*image.RGBA, error) {
+	width := img.Bounds().Max.X - img.Bounds().Min.X
+	height := img.Bounds().Max.Y - img.Bounds().Min.Y
+	resizeFilter := gift.Resize(wSize, 0, gift.LanczosResampling)
+	if height > width {
+		resizeFilter = gift.Resize(0, hSize, gift.LanczosResampling)
+	}
+	dst := image.NewRGBA(image.Rect(0, 0, wSize, hSize))
+	gift.New(resizeFilter).Draw(dst, img)
+	return dst, nil
+}
+
 // Create a tensor BHWC from the image; the values are normalized between 0 and 1
-func imageToNormalizedBWHC(img image.Image, dst tensor.Tensor) error {
+func imageToNormalizedBWHC(img *image.RGBA, dst tensor.Tensor) error {
 	// check if tensor is a pointer
 	rv := reflect.ValueOf(dst)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {

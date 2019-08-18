@@ -7,6 +7,7 @@ type element struct {
 	class string
 }
 
+// box
 type box struct {
 	r          image.Rectangle
 	gridcell   []int
