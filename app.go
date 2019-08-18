@@ -68,9 +68,12 @@ func ProcessOutput(dense *tensor.Dense) ([]Box, error) {
 
 // Sanitize the output
 // from https://medium.com/@jonathan_hui/real-time-object-detection-with-yolo-yolov2-28b1b93e2088
-// 1- Sort the predictions by the confidence scores.
-// 2- Start from the top scores, ignore any current prediction if we find any previous predictions that have the same class and IoU > 0.5 with the current prediction.
-// 3- Repeat step 2 until all predictions are checked.
+//
+// - Sort the predictions by the confidence scores.
+//
+// - Start from the top scores, ignore any current prediction if we find any previous predictions that have the same class and IoU > 0.5 with the current prediction.
+//
+// - Repeat step 2 until all predictions are checked.
 func Sanitize(boxes []Box) []Box {
 	sort.Sort(sort.Reverse(byConfidence(boxes)))
 
