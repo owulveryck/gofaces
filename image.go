@@ -15,11 +15,11 @@ import (
 func resizeImage(img image.Image) (*image.RGBA, error) {
 	width := img.Bounds().Max.X - img.Bounds().Min.X
 	height := img.Bounds().Max.Y - img.Bounds().Min.Y
-	resizeFilter := gift.Resize(wSize, 0, gift.LanczosResampling)
+	resizeFilter := gift.Resize(WSize, 0, gift.LanczosResampling)
 	if height > width {
-		resizeFilter = gift.Resize(0, hSize, gift.LanczosResampling)
+		resizeFilter = gift.Resize(0, HSize, gift.LanczosResampling)
 	}
-	dst := image.NewRGBA(image.Rect(0, 0, wSize, hSize))
+	dst := image.NewRGBA(image.Rect(0, 0, WSize, HSize))
 	gift.New(resizeFilter).Draw(dst, img)
 	return dst, nil
 }

@@ -9,7 +9,7 @@ import (
 	"gorgonia.org/tensor/native"
 )
 
-// ProcessOutput analyze the tensor t and output the prediction boxes
+// ProcessOutput analyze the tensor dense and output the bouding boxes filled with the predictions
 func ProcessOutput(dense *tensor.Dense) ([]Box, error) {
 
 	err := dense.Reshape(gridHeight, gridWidth, (5+numClasses)*boxesPerCell)
@@ -55,9 +55,9 @@ func ProcessOutput(dense *tensor.Dense) ([]Box, error) {
 
 				boxes[counter] = Box{
 					gridcell:   []int{cx, cy},
-					R:          image.Rect(max(y-w/2, 0), max(x-h/2, 0), min(y+w/2, wSize), min(x+h/2, hSize)),
+					R:          image.Rect(max(y-w/2, 0), max(x-h/2, 0), min(y+w/2, WSize), min(x+h/2, HSize)),
 					Confidence: sigmoid64(tc),
-					Classes:    getOrderedElements(softmax(tclasses)),
+					Elements:   getOrderedElements(softmax(tclasses)),
 				}
 				counter++
 			}
@@ -68,16 +68,19 @@ func ProcessOutput(dense *tensor.Dense) ([]Box, error) {
 
 // Sanitize the output
 // from https://medium.com/@jonathan_hui/real-time-object-detection-with-yolo-yolov2-28b1b93e2088
-// 1- Sort the predictions by the confidence scores.
-// 2- Start from the top scores, ignore any current prediction if we find any previous predictions that have the same class and IoU > 0.5 with the current prediction.
-// 3- Repeat step 2 until all predictions are checked.
+//
+// - Sort the predictions by the confidence scores.
+//
+// - Start from the top scores, ignore any current prediction if we find any previous predictions that have the same class and IoU > 0.5 with the current prediction.
+//
+// - Repeat step 2 until all predictions are checked.
 func Sanitize(boxes []Box) []Box {
 	sort.Sort(sort.Reverse(byConfidence(boxes)))
 
 	for i := 1; i < len(boxes); i++ {
 		for j := i + 1; j < len(boxes); {
 			iou := iou(boxes[i].R, boxes[j].R)
-			if iou > 0.5 && boxes[i].Classes[0].Class == boxes[j].Classes[0].Class {
+			if iou > 0.5 && boxes[i].Elements[0].Class == boxes[j].Elements[0].Class {
 				boxes = append(boxes[:j], boxes[j+1:]...)
 				continue
 			}

@@ -11,7 +11,7 @@ func TestCreateMask(t *testing.T) {
 	boxes := []gofaces.Box{
 		gofaces.Box{
 			R: image.Rect(1, 1, 6, 6),
-			Classes: []gofaces.Element{
+			Elements: []gofaces.Element{
 				gofaces.Element{
 					Prob:  0.6,
 					Class: "test",
@@ -19,7 +19,7 @@ func TestCreateMask(t *testing.T) {
 			},
 		},
 	}
-	mask := createMask(416, 416, boxes)
+	mask := CreateMask(416, 416, boxes)
 	cR, cG, cB, cA := col.RGBA()
 	for x := 1; x < 7; x++ {
 		r, g, b, a := mask.At(x, 1).RGBA()
