@@ -16,11 +16,6 @@ import (
 	"gorgonia.org/tensor"
 )
 
-const (
-	wSize = 418
-	hSize = 418
-)
-
 type configuration struct {
 	ConfidenceThreshold float64 `envconfig:"confidence_threshold" default:"0.10" required:"true"`
 	ClassProbaThreshold float64 `envconfig:"proba_threshold" default:"0.90" required:"true"`
@@ -42,6 +37,10 @@ func main() {
 	h := flag.Bool("h", false, "help")
 	flag.Parse()
 	if *h {
+		err := envconfig.Usage("yolo", &config)
+		if err != nil {
+			panic(err)
+		}
 		flag.Usage()
 		os.Exit(0)
 	}
@@ -104,7 +103,7 @@ func main() {
 	fmt.Println(boxes)
 
 	if *outputF != "" {
-		mask := draw.CreateMask(wSize, hSize, boxes)
+		mask := draw.CreateMask(gofaces.WSize, gofaces.HSize, boxes)
 		f, err := os.Create(*outputF)
 		if err != nil {
 			log.Fatal(err)

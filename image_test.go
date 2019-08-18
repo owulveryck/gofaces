@@ -65,10 +65,10 @@ func TestImageToNormalizeBWHC(t *testing.T) {
 func TestGetSuitableImage(t *testing.T) {
 	wFactor := 2
 	hFactor := 3
-	myImage := image.NewRGBA(image.Rect(0, 0, wSize*wFactor, hSize*hFactor))
+	myImage := image.NewRGBA(image.Rect(0, 0, WSize*wFactor, HSize*hFactor))
 
 	// draw a red pixel at 499,599
-	offset := myImage.PixOffset(wSize*wFactor-1, hSize*hFactor-1)
+	offset := myImage.PixOffset(WSize*wFactor-1, HSize*hFactor-1)
 	myImage.Pix[offset+0] = 255 // 1st pixel red
 	myImage.Pix[offset+1] = 0   // 1st pixel green
 	myImage.Pix[offset+2] = 0   // 1st pixel blue
@@ -80,13 +80,13 @@ func TestGetSuitableImage(t *testing.T) {
 	}
 	width := img.Bounds().Max.X - img.Bounds().Min.X
 	height := img.Bounds().Max.Y - img.Bounds().Min.Y
-	if width != wSize {
+	if width != WSize {
 		t.Fail()
 	}
-	if height != hSize {
+	if height != HSize {
 		t.Fail()
 	}
-	r, g, b, a := img.At(wSize*wFactor/hFactor-1, hSize-1).RGBA()
+	r, g, b, a := img.At(WSize*wFactor/hFactor-1, HSize-1).RGBA()
 	if g != 0 || b != 0 || r == 0 || a == 0 {
 		t.Fail()
 	}

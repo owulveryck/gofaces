@@ -24,7 +24,7 @@ func GetTensorFromImage(r io.Reader) (tensor.Tensor, error) {
 	if err != nil {
 		return nil, err
 	}
-	t := tensor.NewDense(tensor.Float32, []int{1, wSize, hSize, 3})
+	t := tensor.NewDense(tensor.Float32, []int{1, WSize, HSize, 3})
 	err = imageToNormalizedBWHC(resized, t)
 	return t, err
 }

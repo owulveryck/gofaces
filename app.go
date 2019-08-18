@@ -9,7 +9,7 @@ import (
 	"gorgonia.org/tensor/native"
 )
 
-// ProcessOutput analyze the tensor t and output the prediction boxes
+// ProcessOutput analyze the tensor dense and output the bouding boxes filled with the predictions
 func ProcessOutput(dense *tensor.Dense) ([]Box, error) {
 
 	err := dense.Reshape(gridHeight, gridWidth, (5+numClasses)*boxesPerCell)
@@ -55,7 +55,7 @@ func ProcessOutput(dense *tensor.Dense) ([]Box, error) {
 
 				boxes[counter] = Box{
 					gridcell:   []int{cx, cy},
-					R:          image.Rect(max(y-w/2, 0), max(x-h/2, 0), min(y+w/2, wSize), min(x+h/2, hSize)),
+					R:          image.Rect(max(y-w/2, 0), max(x-h/2, 0), min(y+w/2, WSize), min(x+h/2, HSize)),
 					Confidence: sigmoid64(tc),
 					Elements:   getOrderedElements(softmax(tclasses)),
 				}
