@@ -1,10 +1,11 @@
-package gofaces
+package draw
 
 import (
 	"fmt"
 	"image"
 	"image/color"
 
+	"github.com/owulveryck/gofaces"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
 	"golang.org/x/image/math/fixed"
@@ -57,12 +58,12 @@ func drawLabel(img *image.NRGBA, x, y int, label string) {
 	d.DrawString(label)
 }
 
-// createMask returns an image with the boxes and labels
-func createMask(width, height int, boxes []box) image.Image {
+// CreateMask returns an image with the boxes and labels
+func CreateMask(width, height int, boxes []gofaces.Box) image.Image {
 	m := image.NewNRGBA(image.Rect(0, 0, width, height))
 
 	for _, b := range boxes {
-		drawRectangle(m, b.r, fmt.Sprintf("%v %2.2f%%", b.classes[0].class, b.classes[0].prob*100))
+		drawRectangle(m, b.R, fmt.Sprintf("%v %2.2f%%", b.Classes[0].Class, b.Classes[0].Prob*100))
 	}
 	return m
 }
