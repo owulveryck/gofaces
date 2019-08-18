@@ -57,7 +57,7 @@ func ProcessOutput(dense *tensor.Dense) ([]Box, error) {
 					gridcell:   []int{cx, cy},
 					R:          image.Rect(max(y-w/2, 0), max(x-h/2, 0), min(y+w/2, wSize), min(x+h/2, hSize)),
 					Confidence: sigmoid64(tc),
-					Classes:    getOrderedElements(softmax(tclasses)),
+					Elements:   getOrderedElements(softmax(tclasses)),
 				}
 				counter++
 			}
@@ -80,7 +80,7 @@ func Sanitize(boxes []Box) []Box {
 	for i := 1; i < len(boxes); i++ {
 		for j := i + 1; j < len(boxes); {
 			iou := iou(boxes[i].R, boxes[j].R)
-			if iou > 0.5 && boxes[i].Classes[0].Class == boxes[j].Classes[0].Class {
+			if iou > 0.5 && boxes[i].Elements[0].Class == boxes[j].Elements[0].Class {
 				boxes = append(boxes[:j], boxes[j+1:]...)
 				continue
 			}

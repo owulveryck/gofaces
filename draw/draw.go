@@ -63,7 +63,7 @@ func CreateMask(width, height int, boxes []gofaces.Box) image.Image {
 	m := image.NewNRGBA(image.Rect(0, 0, width, height))
 
 	for _, b := range boxes {
-		drawRectangle(m, b.R, fmt.Sprintf("%v %2.2f%%", b.Classes[0].Class, b.Classes[0].Prob*100))
+		drawRectangle(m, b.R, fmt.Sprintf("%v %2.2f%%", b.Elements[0].Class, b.Elements[0].Prob*100))
 	}
 	return m
 }
