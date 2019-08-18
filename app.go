@@ -9,8 +9,8 @@ import (
 	"gorgonia.org/tensor/native"
 )
 
-// processOutput analyze the tensor t and output the prediction boxes
-func processOutput(dense *tensor.Dense) ([]box, error) {
+// ProcessOutput analyze the tensor t and output the prediction boxes
+func ProcessOutput(dense *tensor.Dense) ([]Box, error) {
 
 	err := dense.Reshape(gridHeight, gridWidth, (5+numClasses)*boxesPerCell)
 	if err != nil {
@@ -21,7 +21,7 @@ func processOutput(dense *tensor.Dense) ([]box, error) {
 		log.Fatal(err)
 	}
 
-	var boxes = make([]box, gridHeight*gridWidth*boxesPerCell)
+	var boxes = make([]Box, gridHeight*gridWidth*boxesPerCell)
 	var counter int
 	// https://github.com/pjreddie/darknet/blob/61c9d02ec461e30d55762ec7669d6a1d3c356fb2/src/yolo_layer.c#L159
 	for cx := 0; cx < gridWidth; cx++ {
@@ -53,11 +53,11 @@ func processOutput(dense *tensor.Dense) ([]box, error) {
 				w := int(exp(tw) * anchors[2*b] * blockSize)
 				h := int(exp(th) * anchors[2*b+1] * blockSize)
 
-				boxes[counter] = box{
+				boxes[counter] = Box{
 					gridcell:   []int{cx, cy},
-					r:          image.Rect(max(y-w/2, 0), max(x-h/2, 0), min(y+w/2, wSize), min(x+h/2, hSize)),
-					confidence: sigmoid64(tc),
-					classes:    getOrderedElements(softmax(tclasses)),
+					R:          image.Rect(max(y-w/2, 0), max(x-h/2, 0), min(y+w/2, wSize), min(x+h/2, hSize)),
+					Confidence: sigmoid64(tc),
+					Classes:    getOrderedElements(softmax(tclasses)),
 				}
 				counter++
 			}
@@ -66,25 +66,18 @@ func processOutput(dense *tensor.Dense) ([]box, error) {
 	return boxes, nil
 }
 
+// Sanitize the output
 // from https://medium.com/@jonathan_hui/real-time-object-detection-with-yolo-yolov2-28b1b93e2088
 // 1- Sort the predictions by the confidence scores.
 // 2- Start from the top scores, ignore any current prediction if we find any previous predictions that have the same class and IoU > 0.5 with the current prediction.
 // 3- Repeat step 2 until all predictions are checked.
-func sanitize(boxes []box) []box {
+func Sanitize(boxes []Box) []Box {
 	sort.Sort(sort.Reverse(byConfidence(boxes)))
 
 	for i := 1; i < len(boxes); i++ {
-		if boxes[i].confidence < config.ConfidenceThreshold {
-			boxes = boxes[:i]
-			break
-		}
-		if boxes[i].classes[0].prob < config.ClassProbaThreshold {
-			boxes = boxes[:i]
-			break
-		}
 		for j := i + 1; j < len(boxes); {
-			iou := iou(boxes[i].r, boxes[j].r)
-			if iou > 0.5 && boxes[i].classes[0].class == boxes[j].classes[0].class {
+			iou := iou(boxes[i].R, boxes[j].R)
+			if iou > 0.5 && boxes[i].Classes[0].Class == boxes[j].Classes[0].Class {
 				boxes = append(boxes[:j], boxes[j+1:]...)
 				continue
 			}
