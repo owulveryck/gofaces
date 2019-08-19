@@ -10,7 +10,7 @@ It decocded with [onnx-go](https://github.com/owulveryck/onnx-go) and executed b
 # Installation an usage
 
 ```
-`go get github.com/owulveryck/gofaces`
+go get github.com/owulveryck/gofaces
 cd $GOPATH/src/github.com/owulveryck/gofaces/cmd
 go run main.go -h
 ```
