@@ -9,6 +9,13 @@ It decocded with [onnx-go](https://github.com/owulveryck/onnx-go) and executed b
 
 # Installation an usage
 
+## pre-requisites
+
+you need to install [`git-lfs`](https://git-lfs.github.com) in order to get the file `model.onnx` when cloning the repo.
+If you don’t have this, running will fail with an error: `proto: can’t skip unknown wire type 6`
+
+## Installation
+
 ```
 go get github.com/owulveryck/gofaces
 cd $GOPATH/src/github.com/owulveryck/gofaces/cmd
