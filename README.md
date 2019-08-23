@@ -16,7 +16,8 @@ It decocded with [onnx-go](https://github.com/owulveryck/onnx-go) and executed b
 git clone https://github.com/owulveryck/gofaces
 cd gofaces
 git lfs install
-git lfs checkout model.onnx
+git lfs fetch
+git lfs checkout model/model.onnx
 cd cmd
 go run main.go -h
 ```
