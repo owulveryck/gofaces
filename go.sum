@@ -43,6 +43,8 @@ github.com/owulveryck/onnx-go v0.4.0 h1:23Q4Cod25RXcq06QJlqjN+3i0bV18NUR5ipakgLS
 github.com/owulveryck/onnx-go v0.4.0/go.mod h1:J/tWpFXe58JgfsEAofLL5RdJVmny7Q6lIdi9bCPQNBM=
 github.com/owulveryck/onnx-go v0.4.1 h1:Mk2iKsdF+fyjW61WdhQD8/eZ5Z82fp9oTGdkM7p+uzE=
 github.com/owulveryck/onnx-go v0.4.1/go.mod h1:J+buXYZXhLtuMBfBYzM1O2u0tfFjpDExpQe9NhCkyPI=
+github.com/owulveryck/onnx-go v0.5.0 h1:dnSKdTVs8gCbI3MUu91J74YjnYQTDEjoQluN0+/brSg=
+github.com/owulveryck/onnx-go v0.5.0/go.mod h1:J+buXYZXhLtuMBfBYzM1O2u0tfFjpDExpQe9NhCkyPI=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
